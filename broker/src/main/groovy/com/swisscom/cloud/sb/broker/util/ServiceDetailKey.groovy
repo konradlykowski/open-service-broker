@@ -28,6 +28,8 @@ enum ServiceDetailKey {
     ELASTIC_SEARCH_PASSWORD("elastic_search_password", ServiceDetailType.PASSWORD),
     ELASTIC_SEARCH_HOST("elastic_search_host", ServiceDetailType.HOST),
     ELASTIC_SEARCH_PORT("elastic_search_port", ServiceDetailType.PORT),
+    ELASTIC_SEARCH_PORT_MGMT("elastic_search_port_mgmt", ServiceDetailType.PORT),
+    ELASTIC_SEARCH_PORT_INTERNAL("elastic_search_port_internal", ServiceDetailType.PORT),
     APIGEE_CLIENT_ID("apigee_client_id", ServiceDetailType.USERNAME),
     APIGEE_CLIENT_SECRET("apigee_client_secret", ServiceDetailType.PASSWORD),
     MONGODB_ENTERPRISE_GROUP_ID("mongodb_enterprise_group_id", ServiceDetailType.OTHER),

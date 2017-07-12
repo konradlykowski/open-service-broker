@@ -30,6 +30,20 @@ com.swisscom.cloud.sb.broker:
     cfExtPassword: 'change_me'
 
   service:
+    elasticsearch:
+      retryIntervalInSeconds: 15
+      maxRetryDurationInMinutes: 30
+      openstackkUrl: 'https://localhost:5000/v2.0' #Optional config
+      openstackUsername: #Optional config
+      openstackPassword: #Optional config
+      openstackTenantName: #Optional config
+      portRange: '27000-40000'
+      ipRanges: ['172.16.255.224/27']
+      boshDirectorBaseUrl: 'https://localhost:25557'
+      boshDirectorUsername:
+      boshDirectorPassword:
+      boshManifestFolder: 'test/resources/bosh'
+
     mongodbent:
       opsManagerUrl: 'http://localhost:55000'
       opsManagerUrlForAutomationAgent: '' #This parameter is optional
