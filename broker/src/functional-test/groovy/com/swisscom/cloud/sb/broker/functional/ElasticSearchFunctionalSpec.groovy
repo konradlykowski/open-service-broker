@@ -38,7 +38,6 @@ class ElasticSearchFunctionalSpec extends BaseFunctionalSpec {
 
     def "deprovision ElasticSearch service instance"() {
         when:
-        serviceLifeCycler.deleteServiceBindingAndAssert()
         serviceLifeCycler.deleteServiceInstanceAndAssert(true)
         serviceLifeCycler.pauseExecution(400)
 

@@ -15,6 +15,7 @@ import com.swisscom.cloud.sb.broker.provisioning.statemachine.StateMachine
 import com.swisscom.cloud.sb.broker.services.bosh.BoshBasedServiceProvider
 import com.swisscom.cloud.sb.broker.services.bosh.BoshTemplate
 import com.swisscom.cloud.sb.broker.services.bosh.statemachine.BoshStateMachineFactory
+import com.swisscom.cloud.sb.broker.services.elasticsearch.statemachine.ElasticSearchDeprovisionState
 import com.swisscom.cloud.sb.broker.services.elasticsearch.statemachine.ElasticSearchProvisionState
 import com.swisscom.cloud.sb.broker.services.elasticsearch.statemachine.ElasticSearchStateMachineContext
 import com.swisscom.cloud.sb.broker.util.ServiceDetailKey
@@ -64,7 +65,10 @@ class ElasticSearchServiceProvider extends BoshBasedServiceProvider<ElasticSearc
 
     @Override
     Optional<AsyncOperationResult> requestDeprovision(LastOperationJobContext context) {
-        return null
+        StateMachine stateMachine = createDeprovisionStateMachine(context)
+        ServiceStateWithAction currentState = getDeprovisionState(context)
+        def actionResult = stateMachine.setCurrentState(currentState, createStateMachineContext(context))
+        return Optional.of(AsyncOperationResult.of(actionResult.go2NextState ? stateMachine.nextState(currentState) : currentState, actionResult.details))
     }
 
     @Override
@@ -81,7 +85,7 @@ class ElasticSearchServiceProvider extends BoshBasedServiceProvider<ElasticSearc
     private ElasticSearchStateMachineContext createStateMachineContext(LastOperationJobContext context) {
         return new ElasticSearchStateMachineContext(elasticSearchConfig: serviceConfig,
                 elasticSearchFreePortFinder: elasticSearchFreePortFinder,
-                boshFacade:getBoshFacade() ,
+                boshFacade: getBoshFacade(),
                 boshTemplateCustomizer: this,
                 lastOperationJobContext: context)
     }
@@ -103,5 +107,22 @@ class ElasticSearchServiceProvider extends BoshBasedServiceProvider<ElasticSearc
             provisionState = ElasticSearchProvisionState.of(context.lastOperation.internalState)
         }
         return provisionState
+    }
+
+    @VisibleForTesting
+    private StateMachine createDeprovisionStateMachine(LastOperationJobContext context) {
+        StateMachine stateMachine = BoshStateMachineFactory.createDeprovisioningStateFlow(getBoshFacade().shouldCreateOpenStackServerGroup(context))
+        stateMachine.addAll([ElasticSearchDeprovisionState.DEPROVISION_SUCCESS])
+    }
+
+    @VisibleForTesting
+    private ServiceStateWithAction getDeprovisionState(LastOperationJobContext context) {
+        ServiceStateWithAction deprovisionState = null
+        if (!context.lastOperation.internalState) {
+            deprovisionState = createDeprovisionStateMachine(context).states.first()
+        } else {
+            deprovisionState = ElasticSearchDeprovisionState.of(context.lastOperation.internalState)
+        }
+        return deprovisionState
     }
 }
