@@ -4,6 +4,7 @@ import com.swisscom.cloud.sb.broker.services.bosh.BoshFacade
 import com.swisscom.cloud.sb.broker.services.common.ServiceProviderLookup
 import com.swisscom.cloud.sb.broker.services.elasticsearch.ElasticSearchConfig
 import com.swisscom.cloud.sb.broker.services.elasticsearch.ElasticSearchServiceProvider
+import com.swisscom.cloud.sb.client.model.LastOperationState
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import spock.lang.IgnoreIf
@@ -15,7 +16,6 @@ class ElasticSearchFunctionalSpec extends BaseFunctionalSpec {
 
     @Autowired
     private ElasticSearchConfig elasticSearchConfig
-
 
     def setup() {
         serviceLifeCycler.createServiceIfDoesNotExist('elasticsearch', ServiceProviderLookup.findInternalName(ElasticSearchServiceProvider), 'bosh-deployment-teamplate-elasticsearch')
@@ -29,19 +29,17 @@ class ElasticSearchFunctionalSpec extends BaseFunctionalSpec {
 
     def "provision ElasticSearch service instance"() {
         when:
-        serviceLifeCycler.createServiceInstanceAndServiceBindingAndAssert(600, true, true)
-        def credentials = serviceLifeCycler.getCredentials()
-        println("Credentials: ${credentials}")
+        serviceLifeCycler.createServiceInstanceAndAssert(600, true, true)
         then:
+        serviceLifeCycler.getServiceInstanceStatus().state == LastOperationState.SUCCEEDED
         noExceptionThrown()
     }
 
     def "deprovision ElasticSearch service instance"() {
         when:
-        serviceLifeCycler.deleteServiceInstanceAndAssert(true)
-        serviceLifeCycler.pauseExecution(400)
-
+        serviceLifeCycler.deleteServiceInstanceAndAssert(true, 400)
         then:
+        serviceLifeCycler.getServiceInstanceStatus().state == LastOperationState.SUCCEEDED
         noExceptionThrown()
     }
 
