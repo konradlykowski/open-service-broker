@@ -31,6 +31,8 @@ import javax.annotation.PostConstruct
 @CompileStatic
 @Slf4j
 class ElasticSearchServiceProvider extends BoshBasedServiceProvider<ElasticSearchConfig> {
+    public static final String SEARCHGUARD_USERNAME = 'searchguard-username'
+    public static final String SEARCHGUARD_PASSWORD = 'searchguard-password'
     public static final String PORT_HTTP = 'http-port'
     public static final String PORT_INTERNAL = 'internal-port'
     public static final String PORT_MGMT = 'mgmt-port'
@@ -48,6 +50,8 @@ class ElasticSearchServiceProvider extends BoshBasedServiceProvider<ElasticSearc
     Collection<ServiceDetail> customizeBoshTemplate(BoshTemplate template, ProvisionRequest provisionRequest) {
         ServiceInstance serviceInstance = provisioningPersistenceService.getServiceInstance(provisionRequest.serviceInstanceGuid)
 
+        template.replace(SEARCHGUARD_USERNAME, ServiceDetailsHelper.from(serviceInstance.details).getValue(ServiceDetailKey.ELASTIC_SEARCH_USER))
+        template.replace(SEARCHGUARD_PASSWORD, ServiceDetailsHelper.from(serviceInstance.details).getValue(ServiceDetailKey.ELASTIC_SEARCH_PASSWORD))
         template.replace(PORT_HTTP, ServiceDetailsHelper.from(serviceInstance.details).getValue(ServiceDetailKey.ELASTIC_SEARCH_PORT))
         template.replace(PORT_INTERNAL, ServiceDetailsHelper.from(serviceInstance.details).getValue(ServiceDetailKey.ELASTIC_SEARCH_PORT_INTERNAL))
         template.replace(PORT_MGMT, ServiceDetailsHelper.from(serviceInstance.details).getValue(ServiceDetailKey.ELASTIC_SEARCH_PORT_MGMT))
@@ -92,7 +96,7 @@ class ElasticSearchServiceProvider extends BoshBasedServiceProvider<ElasticSearc
 
     @VisibleForTesting
     private StateMachine createProvisionStateMachine(LastOperationJobContext context) {
-        StateMachine stateMachine = new StateMachine([ElasticSearchProvisionState.FIND_PORTS])
+        StateMachine stateMachine = new StateMachine([ElasticSearchProvisionState.FIND_PORTS, ElasticSearchProvisionState.GENERATE_USERNAME_PASSWORD])
         stateMachine.addAllFromStateMachine(BoshStateMachineFactory.createProvisioningStateFlow(getBoshFacade().shouldCreateOpenStackServerGroup(context)))
         stateMachine.addAll([ElasticSearchProvisionState.PROVISION_SUCCESS])
         return stateMachine

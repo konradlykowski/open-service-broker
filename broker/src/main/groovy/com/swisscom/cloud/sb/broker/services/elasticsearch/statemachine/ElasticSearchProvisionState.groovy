@@ -7,6 +7,7 @@ import com.swisscom.cloud.sb.broker.provisioning.statemachine.ServiceStateWithAc
 import com.swisscom.cloud.sb.broker.provisioning.statemachine.StateChangeActionResult
 import com.swisscom.cloud.sb.broker.provisioning.statemachine.action.NoOp
 import com.swisscom.cloud.sb.broker.services.bosh.statemachine.BoshProvisionState
+import com.swisscom.cloud.sb.broker.services.common.UsernamePasswordGenerator
 import com.swisscom.cloud.sb.broker.util.ServiceDetailKey
 import groovy.util.logging.Slf4j
 
@@ -22,6 +23,15 @@ enum ElasticSearchProvisionState implements ServiceStateWithAction<ElasticSearch
                     from(ServiceDetailKey.ELASTIC_SEARCH_PORT, ports.get(0).toString()),
                     from(ServiceDetailKey.ELASTIC_SEARCH_PORT_INTERNAL, ports.get(1).toString()),
                     from(ServiceDetailKey.ELASTIC_SEARCH_PORT_MGMT, ports.get(2).toString())
+            ])
+        }
+    }),
+    GENERATE_USERNAME_PASSWORD(LastOperation.Status.IN_PROGRESS, new OnStateChange<ElasticSearchStateMachineContext>() {
+        @Override
+        StateChangeActionResult triggerAction(ElasticSearchStateMachineContext stateContext) {
+            return new StateChangeActionResult(go2NextState: true, details: [
+                    from(ServiceDetailKey.ELASTIC_SEARCH_USER, UsernamePasswordGenerator.generateUsername()),
+                    from(ServiceDetailKey.ELASTIC_SEARCH_PASSWORD, UsernamePasswordGenerator.generatePassword())
             ])
         }
     }),
