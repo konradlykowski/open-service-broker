@@ -10,14 +10,17 @@ import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.client.HttpClients
+import org.apache.http.ssl.SSLContexts
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 
+import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLException
 import javax.net.ssl.SSLSession
 import javax.net.ssl.SSLSocket
+import java.security.KeyStore
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 
@@ -53,6 +56,25 @@ class RestTemplateFactory {
         return new RestTemplate(requestFactory)
     }
 
+    RestTemplate buildWithSSLClientCertificate(String clientKeystorePath, String clientKeystorePassword) {
+        def restTemplate = new RestTemplate()
+        restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClients.custom().setSSLContext(getSSLContext(clientKeystorePath, clientKeystorePassword)).build()))
+        restTemplate
+    }
+
+    private SSLContext getSSLContext(String clientKeystorePath,  String clientKeystorePassword) {
+        SSLContext sslContext = SSLContexts.custom()
+                .loadKeyMaterial(getKeyStore(clientKeystorePath, clientKeystorePassword), clientKeystorePassword.toCharArray())
+                .loadTrustMaterial(new DummyTrustStrategy())
+                .build()
+        return sslContext
+    }
+
+    private KeyStore getKeyStore(String clientKeystorePath,  String clientKeystorePassword) {
+        def keyStore = KeyStore.getInstance("PKCS12")
+        keyStore.load(new FileInputStream(clientKeystorePath), clientKeystorePassword.toCharArray())
+        return keyStore
+    }
 
     static class DummyTrustStrategy implements TrustStrategy {
         @Override

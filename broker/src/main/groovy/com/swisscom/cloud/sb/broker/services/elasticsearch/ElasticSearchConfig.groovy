@@ -9,5 +9,6 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 @ConfigurationProperties(prefix = "com.swisscom.cloud.sb.broker.service.elasticsearch")
 class ElasticSearchConfig implements BoshBasedServiceConfig {
-
+    String clientKeystorePath
+    String clientKeystorePassword
 }

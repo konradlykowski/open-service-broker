@@ -8,17 +8,17 @@ class ElasticSearchBindResponseDtoSpec extends Specification {
     def "json serialization works correctly"() {
         given:
         ElasticSearchBindResponseDto credentials = new ElasticSearchBindResponseDto(
-                elasticSearchHost: 'https://elasticSearchHost',
-                elasticSearchPort: 1234,
-                elasticSearchInteralPort: 2345,
-                elasticSearchMgmtPort: 3456,
-                elasticSearchUsername: 'username',
-                elasticSearchPassword: 'password'
+                hosts: ['https://hosts'],
+                port: 1234,
+                internalPort: 2345,
+                mgmtPort: 3456,
+                username: 'username',
+                password: 'password'
         )
         and:
         String expected = """{
                             "credentials": {
-                                "host": "https://elasticSearchHost",
+                                "host": "https://hosts",
                                 "port": 1234,
                                 "internal_port": 2345,
                                 "mgmt_port": 3456,

@@ -15,10 +15,13 @@ import com.swisscom.cloud.sb.broker.provisioning.statemachine.StateMachine
 import com.swisscom.cloud.sb.broker.services.bosh.BoshBasedServiceProvider
 import com.swisscom.cloud.sb.broker.services.bosh.BoshTemplate
 import com.swisscom.cloud.sb.broker.services.bosh.statemachine.BoshStateMachineFactory
+import com.swisscom.cloud.sb.broker.services.elasticsearch.searchguard.SearchGuardFacade
+import com.swisscom.cloud.sb.broker.services.elasticsearch.searchguard.SearchGuardFacadeFactory
 import com.swisscom.cloud.sb.broker.services.elasticsearch.statemachine.ElasticSearchDeprovisionState
 import com.swisscom.cloud.sb.broker.services.elasticsearch.statemachine.ElasticSearchProvisionState
 import com.swisscom.cloud.sb.broker.services.elasticsearch.statemachine.ElasticSearchStateMachineContext
 import com.swisscom.cloud.sb.broker.util.ServiceDetailKey
+import com.swisscom.cloud.sb.broker.util.ServiceDetailType
 import com.swisscom.cloud.sb.broker.util.ServiceDetailsHelper
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -37,6 +40,8 @@ class ElasticSearchServiceProvider extends BoshBasedServiceProvider<ElasticSearc
     public static final String PORT_INTERNAL = 'internal-port'
     public static final String PORT_MGMT = 'mgmt-port'
 
+    @Autowired
+    protected SearchGuardFacadeFactory searchGuardFacadeFactory
 
     @Autowired
     protected ElasticSearchFreePortFinder elasticSearchFreePortFinder
@@ -56,7 +61,7 @@ class ElasticSearchServiceProvider extends BoshBasedServiceProvider<ElasticSearc
         template.replace(PORT_INTERNAL, ServiceDetailsHelper.from(serviceInstance.details).getValue(ServiceDetailKey.ELASTIC_SEARCH_PORT_INTERNAL))
         template.replace(PORT_MGMT, ServiceDetailsHelper.from(serviceInstance.details).getValue(ServiceDetailKey.ELASTIC_SEARCH_PORT_MGMT))
 
-        return [ServiceDetail.from(ServiceDetailKey.ELASTIC_SEARCH_HOST, template.instanceCount() as String)]
+        return []
     }
 
     @Override
@@ -77,12 +82,29 @@ class ElasticSearchServiceProvider extends BoshBasedServiceProvider<ElasticSearc
 
     @Override
     BindResponse bind(BindRequest request) {
-        return null
+        def searchGuardFacade = createSearchGuardFacade(request.serviceInstance)
+        ElasticSearchBindResponseDto credentials = searchGuardFacade.createSearchGuardUser()
+        credentials.mgmtPort = Integer.parseInt(ServiceDetailsHelper.from(request.serviceInstance.details).findValue(ServiceDetailKey.ELASTIC_SEARCH_PORT_MGMT).get())
+        credentials.internalPort = Integer.parseInt(ServiceDetailsHelper.from(request.serviceInstance.details).findValue(ServiceDetailKey.ELASTIC_SEARCH_PORT_INTERNAL).get())
+        Collection<ServiceDetail> details = ServiceDetailsHelper.create().add(ServiceDetailKey.USER, credentials.username)
+                .add(ServiceDetailKey.PASSWORD, credentials.password).getDetails()
+
+        return new BindResponse(credentials: credentials, details: details)
     }
 
     @Override
     void unbind(UnbindRequest request) {
+        def searchGuardFacade = createSearchGuardFacade(request.serviceInstance)
+        searchGuardFacade.deleteSearchGuardUser(ServiceDetailsHelper.from(request.binding.details).getValue(ServiceDetailKey.USER))
+    }
 
+    @VisibleForTesting
+    private SearchGuardFacade createSearchGuardFacade(ServiceInstance serviceInstance) {
+        def hosts = ServiceDetailsHelper.from(serviceInstance.details).findAllWithServiceDetailType(ServiceDetailType.HOST)
+        def port = ServiceDetailsHelper.from(serviceInstance.details).findValue(ServiceDetailKey.ELASTIC_SEARCH_PORT)
+        // Use for functional testing
+        // return searchGuardFacadeFactory.build(["localhost"], 9201)
+        return searchGuardFacadeFactory.build(hosts, port.get().toInteger())
     }
 
     @VisibleForTesting

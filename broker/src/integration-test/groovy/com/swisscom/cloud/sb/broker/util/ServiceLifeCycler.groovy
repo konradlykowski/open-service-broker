@@ -37,8 +37,8 @@ public class ServiceLifeCycler {
     private boolean serviceCreated
     private boolean planCreated
 
-    private final String serviceInstanceId
-    private final String serviceBindingId
+    private String serviceInstanceId
+    private String serviceBindingId
 
     ServiceLifeCycler() {
         this(UUID.randomUUID().toString(), UUID.randomUUID().toString())

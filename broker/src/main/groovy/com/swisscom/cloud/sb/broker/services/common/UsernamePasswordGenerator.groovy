@@ -6,7 +6,7 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 class UsernamePasswordGenerator {
-    static String generateUsername(int length = 10) {
+    static String generateUsername(int length = 16) {
         new StringGenerator().randomAlphaNumeric(length)
     }
 

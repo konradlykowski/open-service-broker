@@ -46,7 +46,8 @@ enum ErrorCode {
     SERVICE_INSTANCE_DELETED("69037", "Service Instance not found", "SC-SB-SI", HttpStatus.GONE),
     BILLING_INVALID_PARAMETER("69038", "One or more of the input parameters can not be processed.", "SC-SB-BI", HttpStatus.UNPROCESSABLE_ENTITY),
     BILLING_INFLUX_DB_EMPTY_RESPONSE("69039", "InfluxDB empty result", "SC-SB-BI", HttpStatus.INTERNAL_SERVER_ERROR),
-    SERVICE_UPDATE_NOT_ALLOWED("69040", "Service update is not allowed", "SC-SB-SI", UNPROCESSABLE_ENTITY)
+    SERVICE_UPDATE_NOT_ALLOWED("69040", "Service update is not allowed", "SC-SB-SI", UNPROCESSABLE_ENTITY),
+    ELASTIC_SEARCH_SEARCH_GUARD_AUTHENTICATION_FAILED("69041", "ElasticSearch-SearchGuard authentication failed", "SC-SB-ELASTICSEARCH-SG-AUTHENTICATION-FAIL", HttpStatus.NETWORK_AUTHENTICATION_REQUIRED),
 
     final String code
     final String errorCode
